@@ -1,0 +1,949 @@
+ <!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🎓 Super English Kids!</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>"/>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+
+  <!-- React + Babel (no build needed) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #fff9f0; }
+    @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-9px)} }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+    @keyframes pop    { 0%{transform:scale(.8);opacity:0} 60%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
+    .wcard:hover { transform: translateY(-4px) scale(1.04) !important; }
+    .tbtn:hover  { opacity: .85; }
+    ::-webkit-scrollbar { width: 6px }
+    ::-webkit-scrollbar-thumb { background: #c9b8ff; border-radius: 3px }
+  </style>
+</head>
+<body>
+    <h1>مصطفى عبد العال دحروج</h1>
+
+  <div id="root"></div>
+  
+
+  <script type="text/babel">
+  const { useState, useEffect, useRef, useCallback } = React;
+
+  // ══════════════════════════════════════════
+  //  DATA
+  // ══════════════════════════════════════════
+  const WORDS = {
+    animals:[
+      {en:'Cat',ar:'قطة',e:'🐱'},{en:'Dog',ar:'كلب',e:'🐶'},{en:'Lion',ar:'أسد',e:'🦁'},
+      {en:'Elephant',ar:'فيل',e:'🐘'},{en:'Rabbit',ar:'أرنب',e:'🐰'},{en:'Fish',ar:'سمكة',e:'🐟'},
+      {en:'Bird',ar:'طائر',e:'🐦'},{en:'Monkey',ar:'قرد',e:'🐒'},{en:'Horse',ar:'حصان',e:'🐴'},
+      {en:'Frog',ar:'ضفدع',e:'🐸'},{en:'Cow',ar:'بقرة',e:'🐄'},{en:'Duck',ar:'بطة',e:'🦆'},
+    ],
+    food:[
+      {en:'Apple',ar:'تفاحة',e:'🍎'},{en:'Banana',ar:'موزة',e:'🍌'},{en:'Pizza',ar:'بيتزا',e:'🍕'},
+      {en:'Cake',ar:'كيكة',e:'🎂'},{en:'Milk',ar:'لبن',e:'🥛'},{en:'Egg',ar:'بيضة',e:'🥚'},
+      {en:'Bread',ar:'عيش',e:'🍞'},{en:'Cookie',ar:'بسكويت',e:'🍪'},{en:'Juice',ar:'عصير',e:'🧃'},
+      {en:'Watermelon',ar:'بطيخ',e:'🍉'},{en:'Cheese',ar:'جبنة',e:'🧀'},{en:'Ice Cream',ar:'آيس كريم',e:'🍦'},
+    ],
+    colors:[
+      {en:'Red',ar:'أحمر',e:'🔴'},{en:'Blue',ar:'أزرق',e:'🔵'},{en:'Green',ar:'أخضر',e:'🟢'},
+      {en:'Yellow',ar:'أصفر',e:'🟡'},{en:'Orange',ar:'برتقالي',e:'🟠'},{en:'Purple',ar:'بنفسجي',e:'🟣'},
+      {en:'Pink',ar:'وردي',e:'🩷'},{en:'White',ar:'أبيض',e:'⬜'},{en:'Black',ar:'أسود',e:'⬛'},
+      {en:'Brown',ar:'بني',e:'🟫'},{en:'Gold',ar:'ذهبي',e:'🥇'},{en:'Silver',ar:'فضي',e:'🥈'},
+    ],
+    school:[
+      {en:'Pencil',ar:'قلم رصاص',e:'✏️'},{en:'Book',ar:'كتاب',e:'📚'},{en:'Bag',ar:'شنطة',e:'🎒'},
+      {en:'Ruler',ar:'مسطرة',e:'📏'},{en:'Chair',ar:'كرسي',e:'🪑'},{en:'Table',ar:'ترابيزة',e:'🪵'},
+      {en:'Teacher',ar:'معلم',e:'👨‍🏫'},{en:'Eraser',ar:'ممحاة',e:'🧹'},{en:'Scissors',ar:'مقص',e:'✂️'},
+      {en:'Paint',ar:'ألوان',e:'🎨'},{en:'Globe',ar:'كرة أرضية',e:'🌍'},{en:'Calculator',ar:'آلة حاسبة',e:'🧮'},
+    ],
+    numbers:[
+      {en:'One',ar:'واحد',e:'1️⃣'},{en:'Two',ar:'اتنين',e:'2️⃣'},{en:'Three',ar:'تلاتة',e:'3️⃣'},
+      {en:'Four',ar:'أربعة',e:'4️⃣'},{en:'Five',ar:'خمسة',e:'5️⃣'},{en:'Six',ar:'ستة',e:'6️⃣'},
+      {en:'Seven',ar:'سبعة',e:'7️⃣'},{en:'Eight',ar:'تمانية',e:'8️⃣'},{en:'Nine',ar:'تسعة',e:'9️⃣'},
+      {en:'Ten',ar:'عشرة',e:'🔟'},{en:'Zero',ar:'صفر',e:'0️⃣'},{en:'Hundred',ar:'مية',e:'💯'},
+    ],
+    body:[
+      {en:'Eye',ar:'عين',e:'👁️'},{en:'Ear',ar:'ودن',e:'👂'},{en:'Nose',ar:'أنف',e:'👃'},
+      {en:'Hand',ar:'إيد',e:'✋'},{en:'Foot',ar:'رجل',e:'🦶'},{en:'Head',ar:'رأس',e:'🗣️'},
+      {en:'Heart',ar:'قلب',e:'❤️'},{en:'Mouth',ar:'بق',e:'👄'},{en:'Teeth',ar:'سنان',e:'🦷'},
+      {en:'Hair',ar:'شعر',e:'💇'},{en:'Arm',ar:'دراع',e:'💪'},{en:'Finger',ar:'صبع',e:'☝️'},
+    ],
+    home:[
+      {en:'Door',ar:'باب',e:'🚪'},{en:'Window',ar:'شباك',e:'🪟'},{en:'Bed',ar:'سرير',e:'🛏️'},
+      {en:'Sofa',ar:'أريكة',e:'🛋️'},{en:'TV',ar:'تلفزيون',e:'📺'},{en:'Phone',ar:'تليفون',e:'📱'},
+      {en:'Cup',ar:'كوباية',e:'☕'},{en:'Clock',ar:'ساعة',e:'🕐'},{en:'Lamp',ar:'لمبة',e:'💡'},
+      {en:'Mirror',ar:'مرايا',e:'🪞'},{en:'Key',ar:'مفتاح',e:'🔑'},{en:'Fan',ar:'مروحة',e:'💨'},
+    ],
+  };
+
+  const CAT_NAMES = {
+    animals:'🐾 حيوانات', food:'🍎 أكل', colors:'🎨 ألوان',
+    school:'🎒 مدرسة', numbers:'🔢 أرقام', body:'🫀 جسم', home:'🏠 بيت',
+  };
+
+  const STORY_TOPICS = {
+    adventure:{label:'🦁 مغامرة', en:'a jungle adventure with brave animal friends who learn English together'},
+    animals:  {label:'🐾 حيوانات',en:'funny animal friends at an English school learning new words every day'},
+    space:    {label:'🚀 فضاء',   en:'a space adventure to the moon where aliens learn English'},
+    magic:    {label:'🪄 سحر',    en:'a magic school with young wizards who use English spells'},
+    ocean:    {label:'🌊 بحر',    en:'an underwater adventure with sea creatures learning English words'},
+    family:   {label:'👨‍👩‍👧 عيلة',   en:'a funny family day where everyone learns English phrases together'},
+  };
+
+  const PHRASES = [
+    {en:'Hello!',ar:'مرحبا!',e:'👋'},
+    {en:'Good Morning!',ar:'صباح الخير!',e:'☀️'},
+    {en:'Thank you!',ar:'شكراً!',e:'🙏'},
+    {en:'How are you?',ar:'كيف حالك؟',e:'😊'},
+    {en:"I'm fine!",ar:'أنا بخير!',e:'✨'},
+    {en:'Goodbye!',ar:'وداعاً!',e:'👋'},
+    {en:'Please!',ar:'من فضلك!',e:'🙏'},
+    {en:"Let's go!",ar:'يالا نروح!',e:'🚀'},
+    {en:'Very good!',ar:'ممتاز!',e:'⭐'},
+    {en:'I love you!',ar:'أنا أحبك!',e:'❤️'},
+    {en:'Well done!',ar:'أحسنت!',e:'🎉'},
+    {en:'Be careful!',ar:'انتبه!',e:'⚠️'},
+  ];
+
+  // ══════════════════════════════════════════
+  //  SPEECH  — works in real browser (not iframe)
+  // ══════════════════════════════════════════
+  function speak(text, rate = 0.82) {
+    const clean = text
+      .replace(/[\u0600-\u06FF\u0750-\u077F]+/g, ' ')
+      .replace(/[^\w\s.!?,'\-]/g, ' ')
+      .replace(/\s+/g, ' ').trim();
+    if (!clean) return;
+
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+
+    const say = () => {
+      const u = new SpeechSynthesisUtterance(clean);
+      u.lang = 'en-US'; u.rate = rate; u.pitch = 1.1; u.volume = 1;
+      const voices = window.speechSynthesis.getVoices();
+      const v = voices.find(v => v.lang === 'en-US') || voices.find(v => v.lang.startsWith('en'));
+      if (v) u.voice = v;
+      window.speechSynthesis.speak(u);
+    };
+
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length > 0) { say(); }
+    else { window.speechSynthesis.onvoiceschanged = () => { say(); }; setTimeout(say, 300); }
+  }
+
+  // ══════════════════════════════════════════
+  //  AI  — API key stored in localStorage
+  // ══════════════════════════════════════════
+  function getKey() {
+    return localStorage.getItem('ek_api_key') || '';
+  }
+
+  async function callAI(system, messages) {
+    const key = getKey();
+    if (!key) throw new Error('NO_KEY');
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-allow-browser': 'true',
+      },
+      body: JSON.stringify({ model:'claude-haiku-4-5-20251001', max_tokens:600, system, messages }),
+    });
+    const d = await r.json();
+    if (d.error) throw new Error(d.error.message);
+    return d.content.map(c => c.text||'').join('');
+  }
+
+  // ══════════════════════════════════════════
+  //  STYLES
+  // ══════════════════════════════════════════
+  const S = {
+    app: (dark) => ({
+      fontFamily:"'Nunito',sans-serif", minHeight:'100vh', padding:'14px',
+      background: dark ? '#0d0a1a' : '#fff9f0',
+      color:       dark ? '#f0e6ff' : '#2d1b69',
+      transition:'background .3s,color .3s',
+    }),
+    card: (dark) => ({
+      background: dark ? '#1a1430' : '#fff', borderRadius:20,
+      padding:'16px 18px', marginBottom:14,
+      boxShadow:'0 6px 24px rgba(0,0,0,.12)',
+      border:`2px solid ${dark?'#2d2050':'#e8d5ff'}`,
+    }),
+    pill: (bg,color) => ({background:bg,color,borderRadius:50,padding:'5px 14px',fontWeight:800,fontSize:'0.82rem',display:'inline-flex',alignItems:'center',gap:4}),
+    btn:  (bg,sh='') => ({padding:'10px 22px',borderRadius:50,border:'none',background:bg,color:'#fff',fontWeight:800,cursor:'pointer',fontFamily:"'Nunito',sans-serif",fontSize:'0.9rem',boxShadow:sh,transition:'transform .15s',outline:'none'}),
+    tab:  (active,dark) => ({
+      padding:'9px 15px',borderRadius:50,
+      border:`2px solid ${dark?'#2d2050':'#e8d5ff'}`,
+      background: active ? '#4d96ff' : (dark?'#1a1430':'#fff'),
+      color: active ? '#fff' : (dark?'#c9b8ff':'#6b5b95'),
+      fontWeight:800,fontSize:'0.82rem',cursor:'pointer',
+      fontFamily:"'Nunito',sans-serif",transition:'all .2s',
+      boxShadow: active ? '0 4px 14px rgba(77,150,255,.4)' : 'none',
+    }),
+    cat: (active) => ({
+      padding:'5px 12px',borderRadius:50,cursor:'pointer',fontWeight:700,fontSize:'0.78rem',
+      fontFamily:"'Nunito',sans-serif",transition:'all .2s',
+      border:`2px solid ${active?'#ffd93d':'#e8d5ff'}`,
+      background: active ? '#ffd93d' : '#ffe0f0',
+      color: active ? '#5a3e00' : '#c2185b',
+    }),
+    inp: (dark) => ({
+      flex:1,padding:'11px 16px',borderRadius:50,outline:'none',
+      border:`2px solid ${dark?'#2d2050':'#e8d5ff'}`,
+      background:dark?'#1e1638':'#f3eeff',
+      color:dark?'#f0e6ff':'#2d1b69',
+      fontFamily:"'Nunito',sans-serif",fontSize:'0.9rem',fontWeight:600,
+    }),
+  };
+
+  // ══════════════════════════════════════════
+  //  COMPONENTS
+  // ══════════════════════════════════════════
+  function Dots() {
+    return (
+      <div style={{display:'flex',gap:5,padding:'6px 0'}}>
+        {[0,1,2].map(i=>(
+          <div key={i} style={{
+            width:9,height:9,background:'#4d96ff',borderRadius:'50%',
+            animation:`bounce 1.2s infinite ${i*0.2}s`,
+          }}/>
+        ))}
+      </div>
+    );
+  }
+
+  function WordCard({w, dark, onSpeak}) {
+    const [glow,setGlow] = useState(false);
+    return (
+      <div className="wcard" onClick={()=>{setGlow(true);onSpeak(w.en);setTimeout(()=>setGlow(false),1400);}}
+        style={{
+          background:dark?'#1a1430':'#fff',
+          border:`3px solid ${glow?'#6bcb77':'#e8d5ff'}`,
+          borderRadius:18,padding:'14px 8px',textAlign:'center',cursor:'pointer',
+          transition:'all .2s',
+          boxShadow:glow?'0 0 0 8px rgba(107,203,119,.2)':'0 4px 12px rgba(0,0,0,.08)',
+          transform:glow?'scale(1.06)':'scale(1)',
+        }}>
+        <div style={{fontSize:'2.6rem',marginBottom:6}}>{w.e}</div>
+        <div style={{fontFamily:"'Fredoka One',cursive",fontSize:'1.1rem',color:'#4d96ff'}}>{w.en}</div>
+        <div style={{fontSize:'0.74rem',color:dark?'#c9b8ff':'#6b5b95',marginTop:2}}>{w.ar}</div>
+        <div style={{marginTop:5,fontSize:'0.7rem',color:'#4d96ff',fontWeight:700}}>🔊 اضغط!</div>
+      </div>
+    );
+  }
+
+  function PhraseCard({p, dark}) {
+    const [on,setOn]=useState(false);
+    return (
+      <div onClick={()=>{setOn(true);speak(p.en);setTimeout(()=>setOn(false),1200);}}
+        style={{
+          background:on?'#e8f5e9':(dark?'#1a1430':'#fff'),
+          border:`2px solid ${on?'#6bcb77':'#e8d5ff'}`,
+          borderRadius:16,padding:'12px 14px',cursor:'pointer',
+          display:'flex',alignItems:'center',gap:10,
+          transition:'all .2s',boxShadow:'0 4px 12px rgba(0,0,0,.07)',
+        }}>
+        <span style={{fontSize:'2rem'}}>{p.e}</span>
+        <div>
+          <div style={{fontFamily:"'Fredoka One',cursive",fontSize:'1rem',color:'#4d96ff'}}>{p.en}</div>
+          <div style={{fontSize:'0.8rem',color:dark?'#c9b8ff':'#6b5b95'}}>{p.ar}</div>
+        </div>
+        <span style={{marginLeft:'auto',fontSize:'1.1rem',opacity:.6}}>🔊</span>
+      </div>
+    );
+  }
+
+  function CartoonHero() {
+    return (
+      <svg viewBox="0 0 520 220" style={{width:'100%',maxWidth:520,display:'block',margin:'0 auto'}}>
+        <rect width="520" height="220" fill="#e3f2fd" rx="20"/>
+        <circle cx="60" cy="40" r="28" fill="white" opacity=".7"/>
+        <circle cx="90" cy="32" r="20" fill="white" opacity=".7"/>
+        <circle cx="440" cy="35" r="24" fill="white" opacity=".6"/>
+        <circle cx="465" cy="28" r="18" fill="white" opacity=".6"/>
+        <ellipse cx="260" cy="210" rx="220" ry="22" fill="#a5d6a7"/>
+        <rect x="40" y="190" width="440" height="30" fill="#81c784" rx="8"/>
+        <text x="55" y="195" fontSize="16">🌸</text>
+        <text x="430" y="195" fontSize="16">🌺</text>
+        <text x="240" y="195" fontSize="14">🌼</text>
+        {/* BOY */}
+        <ellipse cx="155" cy="207" rx="40" ry="7" fill="#90a4ae" opacity=".3"/>
+        <ellipse cx="135" cy="200" rx="18" ry="8" fill="#3e2723"/>
+        <ellipse cx="175" cy="200" rx="18" ry="8" fill="#3e2723"/>
+        <rect x="125" y="155" width="28" height="50" rx="10" fill="#1565c0"/>
+        <rect x="160" y="155" width="28" height="50" rx="10" fill="#1976d2"/>
+        <rect x="115" y="90" width="90" height="72" rx="16" fill="#e53935"/>
+        <rect x="147" y="90" width="26" height="72" rx="6" fill="#ef9a9a" opacity=".6"/>
+        <rect x="85" y="95" width="32" height="55" rx="14" fill="#ffcc80"/>
+        <rect x="203" y="95" width="32" height="55" rx="14" fill="#ffcc80"/>
+        <ellipse cx="101" cy="150" rx="14" ry="11" fill="#ffb74d"/>
+        <rect x="90" y="139" width="8" height="14" rx="4" fill="#ffb74d"/>
+        <rect x="100" y="137" width="8" height="16" rx="4" fill="#ffb74d"/>
+        <rect x="110" y="139" width="8" height="14" rx="4" fill="#ffb74d"/>
+        <ellipse cx="219" cy="147" rx="14" ry="11" fill="#ffb74d"/>
+        <rect x="148" y="66" width="24" height="30" rx="8" fill="#ffcc80"/>
+        <ellipse cx="160" cy="50" rx="46" ry="48" fill="#ffcc80"/>
+        <ellipse cx="160" cy="12" rx="46" ry="24" fill="#3e2723"/>
+        <rect x="114" y="12" width="92" height="26" fill="#3e2723"/>
+        <ellipse cx="114" cy="35" rx="12" ry="18" fill="#3e2723"/>
+        <ellipse cx="206" cy="33" rx="11" ry="16" fill="#3e2723"/>
+        <ellipse cx="114" cy="52" rx="11" ry="13" fill="#ffcc80"/>
+        <ellipse cx="206" cy="52" rx="11" ry="13" fill="#ffcc80"/>
+        <ellipse cx="145" cy="46" rx="10" ry="11" fill="white"/>
+        <ellipse cx="175" cy="46" rx="10" ry="11" fill="white"/>
+        <ellipse cx="147" cy="48" rx="6" ry="7" fill="#1a237e"/>
+        <ellipse cx="177" cy="48" rx="6" ry="7" fill="#1a237e"/>
+        <circle cx="149" cy="45" r="2" fill="white"/>
+        <circle cx="179" cy="45" r="2" fill="white"/>
+        <path d="M136,37 Q145,32 154,36" stroke="#3e2723" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+        <path d="M166,36 Q175,31 184,35" stroke="#3e2723" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+        <path d="M143,64 Q160,78 177,64" stroke="#e65100" strokeWidth="3" fill="none" strokeLinecap="round"/>
+        <rect x="150" y="64" width="20" height="8" rx="4" fill="white"/>
+        <ellipse cx="132" cy="58" rx="11" ry="7" fill="#ff8a65" opacity=".4"/>
+        <ellipse cx="188" cy="58" rx="11" ry="7" fill="#ff8a65" opacity=".4"/>
+        <rect x="203" y="94" width="30" height="68" rx="10" fill="#388e3c"/>
+        <rect x="209" y="108" width="20" height="24" rx="6" fill="#4caf50"/>
+        <text x="219" y="123" fontSize="8" fill="white" textAnchor="middle" fontWeight="800">ABC</text>
+        <rect x="218" y="18" width="120" height="52" rx="14" fill="white" stroke="#4d96ff" strokeWidth="2.5"/>
+        <polygon points="230,70 218,88 250,70" fill="white"/>
+        <polygon points="230,70 218,88 250,70" fill="none" stroke="#4d96ff" strokeWidth="2.5" strokeLinejoin="round"/>
+        <polygon points="231,69 221,83 248,69" fill="white"/>
+        <text x="278" y="43" fontSize="13" fontWeight="900" fill="#4d96ff" textAnchor="middle" fontFamily="Arial Rounded MT Bold,Arial,sans-serif">Hello! 👋</text>
+        <text x="278" y="61" fontSize="10" fill="#90a4ae" textAnchor="middle">مرحباً!</text>
+        {/* GIRL */}
+        <ellipse cx="365" cy="207" rx="40" ry="7" fill="#90a4ae" opacity=".3"/>
+        <ellipse cx="345" cy="200" rx="18" ry="8" fill="#880e4f"/>
+        <ellipse cx="385" cy="200" rx="18" ry="8" fill="#880e4f"/>
+        <path d="M330,158 Q325,205 345,205 L385,205 Q405,205 400,158 Z" fill="#7b1fa2"/>
+        <rect x="325" y="90" width="90" height="74" rx="16" fill="#9c27b0"/>
+        <text x="370" y="140" fontSize="20" textAnchor="middle">⭐</text>
+        <rect x="294" y="95" width="33" height="56" rx="14" fill="#ffcc80"/>
+        <rect x="413" y="95" width="33" height="56" rx="14" fill="#ffcc80"/>
+        <ellipse cx="310" cy="150" rx="14" ry="11" fill="#ffb74d"/>
+        <rect x="299" y="139" width="8" height="14" rx="4" fill="#ffb74d"/>
+        <rect x="309" y="137" width="8" height="16" rx="4" fill="#ffb74d"/>
+        <rect x="319" y="139" width="8" height="14" rx="4" fill="#ffb74d"/>
+        <ellipse cx="429" cy="148" rx="14" ry="11" fill="#ffb74d"/>
+        <rect x="424" y="136" width="36" height="28" rx="5" fill="#ff5722"/>
+        <text x="442" y="152" fontSize="7" fill="white" textAnchor="middle" fontWeight="800">English</text>
+        <rect x="358" y="66" width="24" height="30" rx="8" fill="#ffcc80"/>
+        <ellipse cx="370" cy="50" rx="46" ry="48" fill="#ffcc80"/>
+        <ellipse cx="370" cy="10" rx="47" ry="24" fill="#212121"/>
+        <rect x="323" y="10" width="94" height="32" fill="#212121"/>
+        <rect x="323" y="28" width="20" height="100" rx="10" fill="#212121"/>
+        <rect x="397" y="28" width="20" height="100" rx="10" fill="#212121"/>
+        <ellipse cx="404" cy="16" rx="14" ry="9" fill="#ff4081" transform="rotate(-25,404,16)"/>
+        <ellipse cx="418" cy="14" rx="14" ry="9" fill="#ff4081" transform="rotate(25,418,14)"/>
+        <circle cx="411" cy="15" r="6" fill="#ff80ab"/>
+        <ellipse cx="324" cy="52" rx="11" ry="13" fill="#ffcc80"/>
+        <ellipse cx="416" cy="52" rx="11" ry="13" fill="#ffcc80"/>
+        <circle cx="324" cy="60" r="4" fill="#ffd93d"/>
+        <circle cx="416" cy="60" r="4" fill="#ffd93d"/>
+        <ellipse cx="355" cy="46" rx="10" ry="11" fill="white"/>
+        <ellipse cx="385" cy="46" rx="10" ry="11" fill="white"/>
+        <ellipse cx="357" cy="48" rx="7" ry="8" fill="#1a237e"/>
+        <ellipse cx="387" cy="48" rx="7" ry="8" fill="#1a237e"/>
+        <circle cx="359" cy="45" r="2.5" fill="white"/>
+        <circle cx="389" cy="45" r="2.5" fill="white"/>
+        <path d="M345,36 Q355,30 365,35" stroke="#212121" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+        <path d="M375,35 Q385,29 395,34" stroke="#212121" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+        <ellipse cx="370" cy="57" rx="6" ry="5" fill="#ffb74d"/>
+        <path d="M352,68 Q370,84 388,68" stroke="#e65100" strokeWidth="3" fill="none" strokeLinecap="round"/>
+        <rect x="359" y="68" width="22" height="8" rx="4" fill="white"/>
+        <ellipse cx="338" cy="60" rx="12" ry="7" fill="#ff8a65" opacity=".4"/>
+        <ellipse cx="402" cy="60" rx="12" ry="7" fill="#ff8a65" opacity=".4"/>
+        <rect x="162" y="18" width="148" height="66" rx="14" fill="white" stroke="#ff6b6b" strokeWidth="2.5"/>
+        <polygon points="310,60 330,85 290,60" fill="white"/>
+        <polygon points="310,60 330,85 290,60" fill="none" stroke="#ff6b6b" strokeWidth="2.5" strokeLinejoin="round"/>
+        <polygon points="309,59 326,80 293,59" fill="white"/>
+        <text x="236" y="42" fontSize="12" fontWeight="900" fill="#ff6b6b" textAnchor="middle" fontFamily="Arial Rounded MT Bold,Arial,sans-serif">How are you? 😊</text>
+        <text x="236" y="58" fontSize="10" fill="#90a4ae" textAnchor="middle">كيف حالك؟</text>
+        <rect x="175" y="62" width="128" height="16" rx="6" fill="#fff3e0"/>
+        <text x="239" y="74" fontSize="9" fontWeight="800" fill="#e65100" textAnchor="middle">I'm fine, thank you! 🌟</text>
+      </svg>
+    );
+  }
+
+  // ══════════════════════════════════════════
+  // ══════════════════════════════════════════
+  //  KEY MODAL COMPONENT
+  // ══════════════════════════════════════════
+  function KeyModal({ apiKey, setApiKey, setShowKeyModal }) {
+    const [val, setVal] = useState(apiKey || '');
+    const [err, setErr] = useState('');
+    const [testing, setTesting] = useState(false);
+
+    const save = async () => {
+      const k = val.trim();
+      if (!k) { setErr('❌ ادخل المفتاح أولاً!'); return; }
+      if (!k.startsWith('sk-ant-')) { setErr('❌ المفتاح لازم يبدأ بـ sk-ant-'); return; }
+      setTesting(true); setErr('');
+      // quick test call
+      try {
+        const r = await fetch('https://api.anthropic.com/v1/messages', {
+          method:'POST',
+          headers:{'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-allow-browser':'true'},
+          body: JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:10,messages:[{role:'user',content:'Hi'}]}),
+        });
+        const d = await r.json();
+        if (d.error) { setErr('❌ مفتاح غلط: ' + d.error.message); setTesting(false); return; }
+        // success!
+        localStorage.setItem('ek_api_key', k);
+        setApiKey(k);
+        setShowKeyModal(false);
+      } catch(e) {
+        setErr('❌ ' + e.message);
+      }
+      setTesting(false);
+    };
+
+    const clear = () => {
+      localStorage.removeItem('ek_api_key');
+      setApiKey('');
+      setVal('');
+      setShowKeyModal(false);
+    };
+
+    return (
+      <div style={{
+        position:'fixed', inset:0, background:'rgba(0,0,0,.6)',
+        display:'flex', alignItems:'center', justifyContent:'center',
+        zIndex:9999, padding:16, backdropFilter:'blur(4px)',
+      }}>
+        <div style={{
+          background:'#fff', borderRadius:24, padding:'28px 24px',
+          width:'100%', maxWidth:440, boxShadow:'0 20px 60px rgba(0,0,0,.3)',
+          animation:'pop .3s ease',
+        }}>
+          {/* Header */}
+          <div style={{textAlign:'center',marginBottom:20}}>
+            <div style={{fontSize:'3rem',marginBottom:8}}>🔑</div>
+            <div style={{fontFamily:"'Fredoka One',cursive",fontSize:'1.5rem',color:'#2d1b69'}}>
+              مفتاح الذكاء الاصطناعي
+            </div>
+            <div style={{fontSize:'0.83rem',color:'#6b5b95',fontWeight:600,marginTop:4}}>
+              عشان روبي والقصص والكلمات الجديدة تشتغل
+            </div>
+          </div>
+
+          {/* How to get key */}
+          <div style={{background:'#e3f2fd',borderRadius:14,padding:'12px 14px',marginBottom:16}}>
+            <div style={{fontWeight:800,color:'#1565c0',fontSize:'0.85rem',marginBottom:6}}>📋 إزاي تجيب المفتاح؟</div>
+            <div style={{fontSize:'0.8rem',color:'#1565c0',fontWeight:600,lineHeight:1.7}}>
+              1️⃣ روح على <b>console.anthropic.com</b><br/>
+              2️⃣ سجل دخول أو اعمل حساب جديد مجاناً<br/>
+              3️⃣ اضغط <b>API Keys → Create Key</b><br/>
+              4️⃣ انسخ المفتاح (بيبدأ بـ sk-ant-...)
+            </div>
+          </div>
+
+          {/* Input */}
+          <div style={{marginBottom:12}}>
+            <label style={{display:'block',fontWeight:800,color:'#2d1b69',marginBottom:6,fontSize:'0.85rem'}}>
+              🔐 الصق مفتاحك هنا:
+            </label>
+            <input
+              type="password"
+              value={val}
+              onChange={e=>setVal(e.target.value)}
+              onKeyPress={e=>e.key==='Enter'&&save()}
+              placeholder="sk-ant-api03-..."
+              dir="ltr"
+              style={{
+                width:'100%', padding:'12px 16px', borderRadius:12,
+                border:'2px solid #e8d5ff', outline:'none',
+                fontFamily:'monospace', fontSize:'0.88rem',
+                background:'#f3eeff', color:'#2d1b69',
+              }}
+            />
+          </div>
+
+          {err && (
+            <div style={{background:'#ffebee',border:'2px solid #ef9a9a',borderRadius:10,padding:'8px 12px',marginBottom:12,fontSize:'0.82rem',fontWeight:700,color:'#c62828'}}>
+              {err}
+            </div>
+          )}
+
+          {/* Security note */}
+          <div style={{background:'#f3e5f5',borderRadius:10,padding:'8px 12px',marginBottom:16,fontSize:'0.76rem',color:'#6a1b9a',fontWeight:600}}>
+            🔒 المفتاح بيتحفظ في متصفحك فقط — مش بيروح لأي سيرفر تاني
+          </div>
+
+          {/* Buttons */}
+          <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+            <button onClick={save} disabled={testing} style={{
+              flex:1, padding:'12px', borderRadius:50, border:'none',
+              background:'linear-gradient(135deg,#4d96ff,#845ef7)',
+              color:'#fff', fontWeight:800, cursor:'pointer',
+              fontFamily:"'Nunito',sans-serif", fontSize:'0.95rem',
+              boxShadow:'0 4px 14px rgba(77,150,255,.4)',
+              opacity: testing ? .6 : 1,
+            }}>
+              {testing ? '⏳ بيتحقق...' : '✅ حفظ وتفعيل!'}
+            </button>
+            <button onClick={()=>setShowKeyModal(false)} style={{
+              padding:'12px 18px', borderRadius:50, border:'2px solid #e8d5ff',
+              background:'#f3eeff', color:'#6b5b95', fontWeight:800,
+              cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'0.88rem',
+            }}>
+              إلغاء
+            </button>
+          </div>
+
+          {apiKey && (
+            <button onClick={clear} style={{
+              display:'block', width:'100%', marginTop:10,
+              padding:'8px', borderRadius:50, border:'none',
+              background:'#ffebee', color:'#c62828', fontWeight:700,
+              cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:'0.82rem',
+            }}>
+              🗑️ مسح المفتاح
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ══════════════════════════════════════════
+  //  MAIN APP
+  // ══════════════════════════════════════════
+  function App() {
+    const [dark,   setDark]   = useState(false);
+    const [tab,    setTab]    = useState('home');
+    const [score,  setScore]  = useState(0);
+    const [streak, setStreak] = useState(0);
+
+    // words
+    const [cat,       setCat]       = useState('animals');
+    const [extra,     setExtra]     = useState([]);
+    const [aiTopic,   setAiTopic]   = useState('');
+    const [aiLoading, setAiLoading] = useState(false);
+    const [aiErr,     setAiErr]     = useState('');
+    const [apiKey,    setApiKey]    = useState(localStorage.getItem('ek_api_key') || '');
+    const [showKeyModal, setShowKeyModal] = useState(!localStorage.getItem('ek_api_key'));
+    const noKey = !apiKey;
+
+    // chat
+    const [msgs,    setMsgs]   = useState([{role:'ai',text:'أهلاً يا بطل! 🎉 أنا روبي!\nاكتب بالإنجليزي وأنا هساعدك 😄\nجرب: "Hello Roby!" 👋'}]);
+    const [inp,     setInp]    = useState('');
+    const [chatBusy,setChatBusy] = useState(false);
+    const histRef = useRef([]);
+    const chatRef = useRef(null);
+
+    // story
+    const [sType, setSType] = useState('adventure');
+    const [story, setStory] = useState('');
+    const [sLoad, setSLoad] = useState(false);
+
+    // quiz
+    const [qState, setQState] = useState('start');
+    const [qWords, setQWords] = useState([]);
+    const [qIdx,   setQIdx]   = useState(0);
+    const [qScore, setQScore] = useState(0);
+    const [picked, setPicked] = useState(null);
+    const [qOpts,  setQOpts]  = useState([]);
+
+    const addScore = n => { setScore(s=>s+n); setStreak(k=>k+1); };
+    const d = dark;
+
+    useEffect(()=>{
+      if(chatRef.current) chatRef.current.scrollTop=chatRef.current.scrollHeight;
+    },[msgs,chatBusy]);
+
+    const currentWords = [...(WORDS[cat]||[]), ...extra.filter(w=>w._cat===cat)];
+
+    const genOpts = useCallback((w)=>{
+      const all = Object.values(WORDS).flat();
+      const wrong = all.filter(x=>x.en!==w.en).sort(()=>Math.random()-.5).slice(0,3);
+      return [...wrong,w].sort(()=>Math.random()-.5);
+    },[]);
+
+    // ── AI words ──
+    const genWords = async () => {
+      if(!aiTopic.trim() || noKey) return;
+      setAiLoading(true); setAiErr('');
+      try {
+        const res = await callAI(
+          'Return ONLY a raw JSON array — no markdown, no backticks.',
+          `Generate 6 simple English words about "${aiTopic}" for Egyptian kids aged 7-9.
+Format: [{"en":"Word","ar":"الترجمة","e":"emoji"}]`
+        );
+        const parsed = JSON.parse(res.replace(/\`\`\`json|\`\`\`/g,'').trim());
+        setExtra(prev=>[...prev.filter(w=>w._cat!==cat),...parsed.map(w=>({...w,_cat:cat}))]);
+        addScore(3);
+      } catch(e) { setAiErr('❌ '+e.message); }
+      setAiLoading(false);
+    };
+
+    // ── chat ──
+    const sendMsg = async () => {
+      const m = inp.trim();
+      if(!m || chatBusy) return;
+      if(noKey){ setShowKeyModal(true); return; }
+      setInp('');
+      setMsgs(prev=>[...prev,{role:'user',text:m}]);
+      histRef.current.push({role:'user',content:m});
+      setChatBusy(true);
+      try {
+        const res = await callAI(
+          `You are Roby (روبي), a fun English teacher for Egyptian kids aged 7-9.
+Mix simple English + Arabic. Use emojis. Max 4 sentences. Praise English writing. Correct gently.`,
+          histRef.current
+        );
+        histRef.current.push({role:'assistant',content:res});
+        setMsgs(prev=>[...prev,{role:'ai',text:res}]);
+        addScore(2);
+      } catch(e) { setMsgs(prev=>[...prev,{role:'ai',text:'❌ '+e.message}]); }
+      setChatBusy(false);
+    };
+
+    // ── story ──
+    const genStory = async () => {
+      if(noKey){ setShowKeyModal(true); return; }
+      setSLoad(true); setStory('');
+      try {
+        const res = await callAI(
+          'You write short fun English stories for Egyptian kids aged 7-9.',
+          `Write a fun story (max 110 words) about: ${STORY_TOPICS[sType].en}
+Simple A1 vocab. 2 cartoon characters with names. 6 emojis. End with ONE question.
+First line: TITLE IN CAPS. Reply with story text only.`
+        );
+        setStory(res); addScore(5);
+      } catch(e) { setStory('❌ '+e.message); }
+      setSLoad(false);
+    };
+
+    // ── quiz ──
+    const startQuiz = () => {
+      const all = Object.values(WORDS).flat().sort(()=>Math.random()-.5).slice(0,10);
+      setQWords(all); setQIdx(0); setQScore(0); setPicked(null);
+      setQOpts(genOpts(all[0])); setQState('playing');
+    };
+
+    const pickAnswer = (opt) => {
+      if(picked) return;
+      const w = qWords[qIdx];
+      const correct = opt.en===w.en;
+      setPicked(opt.en);
+      if(correct){ setQScore(s=>s+1); speak(w.en); }
+      setTimeout(()=>{
+        const next = qIdx+1;
+        if(next>=qWords.length){ setQState('done'); addScore(qScore*2+(correct?2:0)); }
+        else { setQIdx(next); setQOpts(genOpts(qWords[next])); setPicked(null); }
+      },1800);
+    };
+
+    const TABS = [
+      ['home','🏠 الرئيسية'],['words','📚 كلمات'],['phrases','💬 جمل'],
+      ['chat','🤖 روبي'],['story','📖 قصص'],['quiz','🎯 اختبار'],
+    ];
+
+    return (
+      <>
+        <div style={S.app(d)}>
+
+          {/* HEADER */}
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16,flexWrap:'wrap',gap:8}}>
+            <div>
+              <div style={{fontFamily:"'Fredoka One',cursive",fontSize:'1.8rem',lineHeight:1,
+                background:'linear-gradient(135deg,#ff6b6b,#4d96ff)',WebkitBackgroundClip:'text',
+                WebkitTextFillColor:'transparent',backgroundClip:'text'}}>🎓 Super English Kids!</div>
+              <div style={{fontSize:'0.75rem',color:d?'#c9b8ff':'#6b5b95',fontWeight:700,marginTop:2}}>للأطفال من 7-9 سنوات ✨</div>
+            </div>
+            <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+              <div style={S.pill('#ffe0f0','#c2185b')}>⭐ {score} نجمة</div>
+              {streak>2 && <div style={S.pill('#fff3e0','#e65100')}>🔥 {streak}</div>}
+              <button className="tbtn" onClick={()=>setDark(x=>!x)}
+                style={{...S.btn(d?'#2d2050':'#e8d5ff'),color:d?'#f0e6ff':'#2d1b69'}}>
+                {d?'☀️':'🌙'}
+              </button>
+            </div>
+          </div>
+
+          {/* API KEY BANNER */}
+          {noKey && (
+            <div onClick={()=>setShowKeyModal(true)} style={{
+              background:'linear-gradient(135deg,#fff3e0,#fce4ec)',
+              border:'2px solid #ffd93d',borderRadius:14,padding:'12px 16px',marginBottom:14,
+              cursor:'pointer',display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',
+            }}>
+              <span style={{fontSize:'1.5rem'}}>🔑</span>
+              <div style={{flex:1}}>
+                <div style={{fontWeight:800,fontSize:'0.88rem',color:'#e65100'}}>فعّل الذكاء الاصطناعي!</div>
+                <div style={{fontSize:'0.76rem',color:'#bf360c',fontWeight:600}}>اضغط هنا عشان تضع API key وتفعّل روبي والقصص والكلمات الجديدة</div>
+              </div>
+              <div style={{background:'#ff6b6b',color:'white',borderRadius:50,padding:'6px 16px',fontWeight:800,fontSize:'0.82rem'}}>
+                ضع المفتاح 🔑
+              </div>
+            </div>
+          )}
+          {apiKey && (
+            <div style={{
+              background:'linear-gradient(135deg,#e8f5e9,#e3f2fd)',
+              border:'2px solid #81c784',borderRadius:14,padding:'10px 16px',marginBottom:14,
+              display:'flex',alignItems:'center',gap:10,justifyContent:'space-between',flexWrap:'wrap',
+            }}>
+              <div style={{display:'flex',alignItems:'center',gap:8}}>
+                <span style={{fontSize:'1.2rem'}}>✅</span>
+                <span style={{fontWeight:800,fontSize:'0.85rem',color:'#2e7d32'}}>الذكاء الاصطناعي شغال! روبي جاهز 🤖</span>
+              </div>
+              <button onClick={()=>setShowKeyModal(true)} style={{
+                background:'none',border:'2px solid #81c784',borderRadius:50,padding:'4px 12px',
+                fontSize:'0.75rem',fontWeight:700,color:'#2e7d32',cursor:'pointer',
+              }}>✏️ تعديل المفتاح</button>
+            </div>
+          )}
+          {/* KEY MODAL */}
+          {showKeyModal && <KeyModal apiKey={apiKey} setApiKey={setApiKey} setShowKeyModal={setShowKeyModal}/>}
+
+          {/* TABS */}
+          <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:16}}>
+            {TABS.map(([id,label])=>(
+              <button key={id} className="tbtn" style={S.tab(tab===id,d)} onClick={()=>setTab(id)}>{label}</button>
+            ))}
+          </div>
+
+          {/* ── HOME ── */}
+          {tab==='home' && (
+            <>
+              <div style={S.card(d)}><CartoonHero/></div>
+              <div style={S.card(d)}>
+                <div style={{fontFamily:"'Fredoka One',cursive",fontSize:'1.2rem',color:'#ff6b6b',marginBottom:12,textAlign:'center'}}>
+                  🚀 ابدأ رحلة تعلم الإنجليزي!
+                </div>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(130px,1fr))',gap:10}}>
+                  {[['📚','كلمات','words','#e3f2fd','#1565c0'],
+                    ['💬','جمل','phrases','#fce4ec','#880e4f'],
+                    ['🤖','روبي','chat','#e8f5e9','#2e7d32'],
+                    ['📖','قصص','story','#fff3e0','#e65100'],
+                    ['🎯','اختبار','quiz','#f3e5f5','#6a1b9a']].map(([ic,lab,tid,bg,col])=>(
+                    <div key={tid} onClick={()=>setTab(tid)} className="wcard"
+                      style={{background:bg,borderRadius:16,padding:'18px 10px',textAlign:'center',cursor:'pointer',border:`2px solid ${col}22`}}>
+                      <div style={{fontSize:'2rem',marginBottom:6}}>{ic}</div>
+                      <div style={{fontWeight:800,color:col,fontSize:'0.88rem'}}>{lab}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div style={S.card(d)}>
+                <div style={{fontFamily:"'Fredoka One',cursive",fontSize:'1rem',color:'#4d96ff',marginBottom:8}}>📊 إحصائياتي</div>
+                <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+                  <span style={S.pill('#e3f2fd','#1565c0')}>⭐ {score} نجمة</span>
+                  <span style={S.pill('#e8f5e9','#2e7d32')}>🔥 {streak} تتابع</span>
+                  <span style={S.pill('#fff3e0','#e65100')}>📚 {Object.values(WORDS).flat().length} كلمة</span>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* ── WORDS ── */}
+          {tab==='words' && (
+            <>
+              <div style={S.card(d)}>
+                <div style={{fontFamily:"'Fredoka One',cursive",fontSize:'1rem',color:'#4d96ff',marginBottom:10}}>اختار الموضوع 🎨</div>
+                <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:14}}>
+                  {Object.keys(CAT_NAMES).map(k=>(
+                    <button key={k} className="tbtn" style={S.cat(cat===k)} onClick={()=>{setCat(k);setExtra([]);}}>{CAT_NAMES[k]}</button>
+                  ))}
+                </div>
+                {!noKey && (
+                  <div style={{borderTop:`1px solid ${d?'#2d2050':'#f3eeff'}`,paddingTop:12}}>
+                    <div style={{fontWeight:700,color:d?'#c9b8ff':'#6b5b95',marginBottom:8,fontSize:'0.83rem'}}>🤖 اطلب كلمات من الذكاء الاصطناعي:</div>
+                    <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                      <input style={{...S.inp(d),maxWidth:210}} dir="ltr" placeholder="e.g. sports, weather..."
+                        value={aiTopic} onChange={e=>setAiTopic(e.target.value)} onKeyPress={e=>e.key==='Enter'&&genWords()}/>
+                      <button className="tbtn" style={S.btn('linear-gradient(135deg,#ff6b6b,#ffd93d)','0 4px 14px rgba(255,107,107,.4)')}
+                        onClick={genWords} disabled={aiLoading||!aiTopic.trim()}>
+                        {aiLoading?'⏳...':'✨ اجيب!'}
+                      </button>
+                    </div>
+                    {aiErr && <div style={{color:'#ff6b6b',fontSize:'0.8rem',marginTop:6}}>{aiErr}</div>}
+                  </div>
+                )}
+              </div>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(126px,1fr))',gap:12,marginBottom:14}}>
+                {currentWords.map((w,i)=>(
+                  <WordCard key={i} w={w} dark={d} onSpeak={t=>{speak(t);addScore(1);}}/>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* ── PHRASES ── */}
+          {tab==='phrases' && (
+            <>
+              <div style={S.card(d)}>
+                <div style={{fontFamily:"'Fredoka One',cursive",fontSize:'1.1rem',color:'#ff6b6b',marginBottom:4}}>💬 جمل يومية!</div>
+                <div style={{fontSize:'0.82rem',color:d?'#c9b8ff':'#6b5b95',fontWeight:700}}>اضغط على أي جملة عشان تسمعها 🔊</div>
+              </div>
+              <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                {PHRASES.map((p,i)=><PhraseCard key={i} p={p} dark={d}/>)}
+              </div>
+            </>
+          )}
+
+          {/* ── CHAT ── */}
+          {tab==='chat' && (
+            <>
+              <div style={{...S.card(d),background:'linear-gradient(135deg,#fff0f6,#f0f0ff)',padding:'12px 16px',marginBottom:12}}>
+                <div style={{fontWeight:800,fontSize:'0.88rem'}}>🤖 أنا <b>روبي</b>! اتكلم معايا بالإنجليزي 😄</div>
+              </div>
+              <div ref={chatRef} style={{
+                background:d?'#1e1638':'#f3eeff',borderRadius:18,padding:14,
+                height:320,overflowY:'auto',marginBottom:12,
+                display:'flex',flexDirection:'column',gap:10,
+                border:`2px solid ${d?'#2d2050':'#e8d5ff'}`,
+              }}>
+                {msgs.map((m,i)=>(
+                  <div key={i} style={{display:'flex',gap:8,flexDirection:m.role==='user'?'row-reverse':'row',alignItems:'flex-end',animation:'fadeUp .3s ease'}}>
+                    <div style={{fontSize:'1.6rem',flexShrink:0}}>{m.role==='user'?'👦':'🤖'}</div>
+                    <div>
+                      <div style={{
+                        borderRadius:16,padding:'10px 14px',maxWidth:'78%',fontSize:'0.9rem',
+                        fontWeight:600,lineHeight:1.6,whiteSpace:'pre-wrap',wordBreak:'break-word',
+                        background:m.role==='user'?'#4d96ff':(d?'#1a1430':'#fff'),
+                        color:m.role==='user'?'#fff':(d?'#f0e6ff':'#2d1b69'),
+                        border:`2px solid ${m.role==='user'?'#4d96ff':(d?'#2d2050':'#e8d5ff')}`,
+                      }}>{m.text}</div>
+                      {m.role==='ai' && (
+                        <button onClick={()=>speak(m.text)} style={{background:'none',border:'none',cursor:'pointer',fontSize:'0.95rem',opacity:.6,marginTop:2}}>🔊</button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {chatBusy && (
+                  <div style={{display:'flex',gap:8,alignItems:'flex-end'}}>
+                    <div style={{fontSize:'1.6rem'}}>🤖</div>
+                    <div style={{background:d?'#1a1430':'#fff',border:`2px solid ${d?'#2d2050':'#e8d5ff'}`,borderRadius:16,padding:'12px 16px'}}>
+                      <Dots/>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div style={{display:'flex',gap:8}}>
+                <input style={S.inp(d)} dir="ltr" placeholder="اكتب بالإنجليزي أو العربي..."
+                  value={inp} onChange={e=>setInp(e.target.value)} onKeyPress={e=>e.key==='Enter'&&sendMsg()}/>
+                <button className="tbtn" style={S.btn('linear-gradient(135deg,#4d96ff,#845ef7)','0 4px 14px rgba(77,150,255,.4)')}
+                  onClick={sendMsg} disabled={chatBusy||!inp.trim()}>إرسال 🚀</button>
+              </div>
+            </>
+          )}
+
+          {/* ── STORY ── */}
+          {tab==='story' && (
+            <>
+              <div style={S.card(d)}>
+                <div style={{fontFamily:"'Fredoka One',cursive",fontSize:'1rem',color:'#ff6b6b',marginBottom:10}}>📖 اختار نوع القصة:</div>
+                <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:14}}>
+                  {Object.entries(STORY_TOPICS).map(([k,v])=>(
+                    <button key={k} className="tbtn" style={S.cat(sType===k)} onClick={()=>setSType(k)}>{v.label}</button>
+                  ))}
+                </div>
+                <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                  <button className="tbtn" style={S.btn('linear-gradient(135deg,#ff6b6b,#ffd93d)','0 4px 14px rgba(255,107,107,.4)')}
+                    onClick={genStory} disabled={sLoad}>{sLoad?'⏳ بيكتب...':'📖 احكيلي قصة!'}</button>
+                  <button className="tbtn" style={S.btn('linear-gradient(135deg,#6bcb77,#4d96ff)','0 4px 14px rgba(107,203,119,.4)')}
+                    onClick={()=>story&&speak(story)} disabled={!story||sLoad}>🔊 اسمع القصة</button>
+                </div>
+              </div>
+              <div style={{...S.card(d),minHeight:180}}>
+                {sLoad && <div style={{textAlign:'center',padding:'30px'}}><Dots/></div>}
+                {!sLoad && !story && (
+                  <div style={{textAlign:'center',padding:'30px',color:d?'#c9b8ff':'#6b5b95'}}>
+                    <div style={{fontSize:'3rem',marginBottom:10}}>📚</div>
+                    <div style={{fontWeight:700}}>اضغط "احكيلي قصة" 🎉</div>
+                  </div>
+                )}
+                {!sLoad && story && <div style={{lineHeight:1.9,fontSize:'0.97rem',fontWeight:600,whiteSpace:'pre-wrap'}}>{story}</div>}
+              </div>
+            </>
+          )}
+
+          {/* ── QUIZ ── */}
+          {tab==='quiz' && (
+            <div style={{...S.card(d),textAlign:'center',padding:'28px 16px'}}>
+              {qState==='start' && (
+                <>
+                  <div style={{fontSize:'4rem',marginBottom:14}}>🎯</div>
+                  <div style={{fontFamily:"'Fredoka One',cursive",fontSize:'1.5rem',marginBottom:8}}>جاهز للاختبار؟</div>
+                  <div style={{color:d?'#c9b8ff':'#6b5b95',fontWeight:700,marginBottom:24}}>10 أسئلة — اكسب نجوم ⭐</div>
+                  <button className="tbtn" style={S.btn('linear-gradient(135deg,#4d96ff,#845ef7)','0 4px 14px rgba(77,150,255,.4)')}
+                    onClick={startQuiz}>🚀 ابدأ!</button>
+                </>
+              )}
+              {qState==='playing' && qWords[qIdx] && (()=>{
+                const w = qWords[qIdx];
+                return (
+                  <>
+                    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:16,justifyContent:'center'}}>
+                      <span style={{fontWeight:800,color:d?'#c9b8ff':'#6b5b95',fontSize:'0.85rem'}}>سؤال {qIdx+1}/{qWords.length}</span>
+                      <div style={{flex:1,maxWidth:200,height:8,background:d?'#2d2050':'#e8d5ff',borderRadius:4,overflow:'hidden'}}>
+                        <div style={{width:`${((qIdx+1)/qWords.length)*100}%`,height:'100%',background:'#4d96ff',borderRadius:4,transition:'width .4s'}}/>
+                      </div>
+                      <span style={S.pill('#e3f2fd','#1565c0')}>⭐{qScore}</span>
+                    </div>
+                    <div style={{fontWeight:800,color:d?'#c9b8ff':'#6b5b95',marginBottom:6}}>🤔 ايه معنى...</div>
+                    <div style={{fontSize:'4rem',margin:'10px 0',animation:'pop .4s ease'}}>{w.e}</div>
+                    <div style={{fontFamily:"'Fredoka One',cursive",fontSize:'2.2rem',color:'#4d96ff',marginBottom:18}}>{w.en}</div>
+                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+                      {qOpts.map((o,i)=>{
+                        let bg=d?'#1e1638':'#f3eeff', br=d?'#2d2050':'#e8d5ff';
+                        if(picked){ if(o.en===w.en){bg='#6bcb77';br='#6bcb77';} else if(o.en===picked){bg='#ff6b6b';br='#ff6b6b';} }
+                        return (
+                          <button key={i} disabled={!!picked} onClick={()=>pickAnswer(o)}
+                            style={{padding:14,borderRadius:14,border:`3px solid ${br}`,background:bg,cursor:picked?'default':'pointer',
+                              fontWeight:800,fontSize:'1rem',fontFamily:"'Fredoka One',cursive",
+                              color:picked&&(o.en===w.en||o.en===picked)?'#fff':(d?'#f0e6ff':'#2d1b69'),transition:'all .2s'}}>
+                            {o.ar}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {picked && (
+                      <div style={{marginTop:14,fontWeight:800,fontSize:'1.1rem',animation:'fadeUp .3s ease',color:picked===w.en?'#6bcb77':'#ff6b6b'}}>
+                        {picked===w.en?'🎉 صح! أنت عبقري!':`❌ الصح: ${w.ar} — ${w.en} 💪`}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+              {qState==='done' && (
+                <>
+                  <div style={{fontSize:'4rem',marginBottom:14,animation:'pop .5s ease'}}>🏆</div>
+                  <div style={{fontFamily:"'Fredoka One',cursive",fontSize:'1.5rem',marginBottom:8}}>انتهى الاختبار!</div>
+                  <div style={{fontSize:'2rem',fontWeight:900,color:'#6bcb77',margin:'14px 0'}}>{qScore}/{qWords.length} ⭐</div>
+                  <div style={{fontWeight:700,color:d?'#c9b8ff':'#6b5b95',marginBottom:16}}>
+                    {qScore>=9?'🎉 ممتاز!':qScore>=7?'😊 كويس جداً!':qScore>=5?'💪 تدرب أكتر!':'📚 ذاكر وحاول تاني!'}
+                  </div>
+                  <div style={{display:'flex',gap:10,justifyContent:'center',flexWrap:'wrap'}}>
+                    <button className="tbtn" style={S.btn('linear-gradient(135deg,#4d96ff,#845ef7)','0 4px 14px rgba(77,150,255,.4)')} onClick={startQuiz}>🔄 تاني!</button>
+                    <button className="tbtn" style={S.btn('linear-gradient(135deg,#ff6b6b,#ffd93d)','0 4px 14px rgba(255,107,107,.4)')} onClick={()=>setTab('words')}>📚 كلمات</button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          <div style={{textAlign:'center',marginTop:20,color:d?'#c9b8ff':'#6b5b95',fontSize:'0.75rem',fontWeight:700}}>
+            🎓 Super English Kids — Made with ❤️ for Egyptian children
+          </div>
+
+        </div>
+      </>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
+</body>
+</html>
